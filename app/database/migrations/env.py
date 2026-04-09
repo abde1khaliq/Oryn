@@ -12,6 +12,7 @@ config.set_main_option("sqlalchemy.url", settings.database_url)
 
 from app.models.tenant import Tenant
 from app.models.user import User
+from app.models.plan import Plan
 
 
 target_metadata = Base.metadata
