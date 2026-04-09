@@ -13,7 +13,7 @@ def create_access_token(user_id: str, tenant_id: str) -> str:
 
 def decode_access_token(access_token: str) -> dict:
     try:
-        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        return jwt.decode(access_token, settings.secret_key, algorithms=[settings.algorithm])
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail='Token has expired.')
     except jwt.InvalidTokenError:
