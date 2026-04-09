@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, func, Integer
+# models/tenant.py
+from sqlalchemy import Column, String, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database.session import Base
@@ -11,7 +12,8 @@ class Tenant(Base):
     name = Column(String, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     plan = relationship("Plan", back_populates="tenants")
-    owner = relationship('User', back_populates='tenant_id')
+    owner = relationship("User", foreign_keys=[owner_id])
+    users = relationship("User", back_populates="tenant", foreign_keys="User.tenant_id")

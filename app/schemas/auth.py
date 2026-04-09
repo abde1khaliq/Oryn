@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 
-class RegisterationForm(BaseModel):
+class RegistrationForm(BaseModel):
     email: EmailStr
     username: str
     company_name: str

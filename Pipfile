@@ -10,9 +10,9 @@ uvicorn = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
 alembic = "*"
-bcrypt = "*"
 pydantic = {extras = ["email"], version = "*"}
 asyncpg = "*"
+passlib = {extras = ["argon2"], version = "*"}
 
 [dev-packages]
 
