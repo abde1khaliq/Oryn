@@ -5,12 +5,14 @@ name = "pypi"
 
 [packages]
 fastapi = "*"
-pydantic = "*"
 pydantic-settings = "*"
 uvicorn = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
 alembic = "*"
+bcrypt = "*"
+pydantic = {extras = ["email"], version = "*"}
+asyncpg = "*"
 
 [dev-packages]
 

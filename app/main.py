@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.routes.auth import router as auth_router
 
 app = FastAPI(title='Oryn', description="""
 A backend API where companies sign up, get their own private workspace, 
@@ -11,3 +12,5 @@ async def health_check():
         "status": "healthy",
         "app": "Oryn"
     }
+
+app.include_router(auth_router, prefix='/auth', tags=['Authentication Layer'])
