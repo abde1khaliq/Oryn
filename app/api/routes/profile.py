@@ -9,7 +9,12 @@ from app.schemas.profile import UpdateProfileForm
 
 router = APIRouter()
 
-@router.get('/profile')
+
+@router.get(
+    '/profile',
+    summary="Get current user's profile",
+    description="Returns the authenticated user's details including their email, username, role, and the tenant they belong to."
+)
 async def get_profile_route(user: User = Depends(get_current_user)):
     return {
         "id": user.id,
@@ -21,8 +26,15 @@ async def get_profile_route(user: User = Depends(get_current_user)):
     }
 
 
-@router.get('/profile/workspace')
-async def get_workspace_route(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@router.get(
+    '/profile/workspace',
+    summary="Get current user's workspace",
+    description="Returns the details of the tenant workspace the authenticated user belongs to, including the workspace name, creation date, and active plan."
+)
+async def get_workspace_route(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))
     tenant = result.scalar_one_or_none()
 
@@ -37,7 +49,11 @@ async def get_workspace_route(user: User = Depends(get_current_user), db: AsyncS
     }
 
 
-@router.patch('/profile')
+@router.patch(
+    '/profile',
+    summary="Update current user's profile",
+    description="Allows the authenticated user to update their profile information. Currently supports updating the username. Only the fields provided will be updated."
+)
 async def update_profile_route(
     form: UpdateProfileForm,
     user: User = Depends(get_current_user),

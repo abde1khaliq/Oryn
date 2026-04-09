@@ -11,14 +11,14 @@ router = APIRouter()
     "/register",
     summary="Register a new account",
     description="""
-    Creates a new user and automatically creates a Tenant under the Free plan.
+    Creates a new user and automatically creates a Workspace under the Free plan.
     This endpoint checks if the email already exists, assigns the Free plan,
     and returns the created user details.
     """
 )
 async def register_route(form: RegistrationForm, db: AsyncSession = Depends(get_db)):
     """
-    Register a new tenant and owner user.
+    Register a new Workspace and owner user.
     """
     user = await register_user(form, db)
     return user

@@ -17,6 +17,6 @@ async def health_check():
     }
 
 app.include_router(auth_router, prefix='/auth', tags=['Authentication Layer'])
-app.include_router(tenant_router, prefix='/tenant', tags=['Tenant Endpoints'])
-app.include_router(invitation_router, prefix='/tenant', tags=['Tenant Endpoints'])
+app.include_router(tenant_router, prefix='/workspace', tags=['Workspace Endpoints'])
+app.include_router(invitation_router, prefix='/workspace', tags=['Workspace Endpoints'])
 app.include_router(profile_router, tags=["Profile"])

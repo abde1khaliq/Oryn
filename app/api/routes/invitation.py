@@ -12,7 +12,12 @@ from app.core.security import hash_password
 
 router = APIRouter()
 
-@router.post('/invitations')
+
+@router.post(
+    '/invitations',
+    summary="Create an invitation link",
+    description="Generates a unique invitation token for the current tenant. Only owners can create invitations. If an invitation already exists for this tenant it will be overwritten with a new token."
+)
 async def create_invitation_route(
     form: InvitationForm,
     user: User = Depends(get_current_user),
@@ -23,14 +28,12 @@ async def create_invitation_route(
 
     token = secrets.token_urlsafe(8)
 
-    # check if an invitation already exists for this tenant
     result = await db.execute(
         select(Invitation).where(Invitation.tenant_id == user.tenant_id)
     )
     existing_invitation = result.scalar_one_or_none()
 
     if existing_invitation:
-        # overwrite the existing one
         existing_invitation.token = token
         existing_invitation.max_uses = form.max_uses
         existing_invitation.uses = 0
@@ -46,7 +49,12 @@ async def create_invitation_route(
     await db.commit()
     return {"invitation_token": f"{token}"}
 
-@router.get('/invitations/{token}')
+
+@router.get(
+    '/invitations/{token}',
+    summary="Validate an invitation token",
+    description="Checks whether an invitation token is valid and has not exceeded its maximum uses. Returns the associated tenant ID if valid. Use this before showing the registration form to the invited user."
+)
 async def validate_invitation_token_route(token: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invitation).where(Invitation.token == token))
     invitation = result.scalar_one_or_none()
@@ -59,8 +67,17 @@ async def validate_invitation_token_route(token: str, db: AsyncSession = Depends
 
     return {"valid": True, "tenant_id": invitation.tenant_id}
 
-@router.post('/invitations/{token}/accept')
-async def accept_invitation_route(form: AcceptInvitationForm, token: str, db: AsyncSession = Depends(get_db),):
+
+@router.post(
+    '/invitations/{token}/accept',
+    summary="Accept an invitation and create an account",
+    description="Registers a new member user under the tenant associated with the invitation token. The token must be valid and have remaining uses. The email must not already exist within the same workspace."
+)
+async def accept_invitation_route(
+    form: AcceptInvitationForm,
+    token: str,
+    db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(Invitation).where(Invitation.token == token))
     invitation = result.scalar_one_or_none()
 
@@ -69,12 +86,13 @@ async def accept_invitation_route(form: AcceptInvitationForm, token: str, db: As
 
     if invitation.uses >= invitation.max_uses:
         raise HTTPException(status_code=400, detail='Invitation link has reached its maximum uses.')
-    
-    existing = await db.execute(select(User).where(User.email == form.email, User.tenant_id == invitation.tenant_id))
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail='This email is already in this Tenant.')
 
-    # create the user
+    existing = await db.execute(
+        select(User).where(User.email == form.email, User.tenant_id == invitation.tenant_id)
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail='This email is already in this Workspace.')
+
     user = User(
         email=form.email,
         username=form.username,
@@ -83,10 +101,7 @@ async def accept_invitation_route(form: AcceptInvitationForm, token: str, db: As
         tenant_id=invitation.tenant_id
     )
     db.add(user)
-
-    # increment uses
     invitation.uses += 1
 
     await db.commit()
-
     return {"message": "Account created successfully."}
