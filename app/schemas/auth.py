@@ -5,3 +5,7 @@ class RegistrationForm(BaseModel):
     username: str
     company_name: str
     password: str
+
+class LoginForm(BaseModel):
+    email: EmailStr
+    password: str

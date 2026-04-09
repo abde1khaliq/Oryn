@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.schemas.auth import RegistrationForm
+from app.schemas.auth import RegistrationForm, LoginForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.database.session import get_db
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.plan import Plan
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
+from app.core.jwt import create_access_token
 
 router = APIRouter()
 
@@ -53,3 +54,17 @@ async def register_route(form: RegistrationForm, db: AsyncSession = Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
     return {"message": "Account created successfully."}
+
+@router.post('/login')
+async def authenticate_user_route(form: LoginForm, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == form.email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail='User with this email not found.')
+
+    if not verify_password(form.password, user.password_hash):
+        raise HTTPException(status_code=401, detail='Password or email is incorrect.')
+
+    access_token = create_access_token(user.id, user.tenant_id)
+    return {'access_token': access_token}
