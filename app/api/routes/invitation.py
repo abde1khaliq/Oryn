@@ -43,4 +43,4 @@ async def create_invitation_route(
         db.add(invitation)
 
     await db.commit()
-    return {"invite_url": f"{settings.backend_url}invitations/{token}"}
+    return {"invitation_token": f"{token}"}
