@@ -1,56 +1,36 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies import get_current_user
 from app.models.user import User
-from app.models.tenant import Tenant
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from app.database.session import get_db
 from app.schemas.profile import UpdateProfileForm
+from app.services.profile_service import get_profile, get_workspace, update_profile
 
-router = APIRouter()
-
+router = APIRouter(tags=["Profile"])
 
 @router.get(
-    '/profile',
+    "/profile",
     summary="Get current user's profile",
-    description="Returns the authenticated user's details including their email, username, role, and the tenant they belong to."
+    description="Returns the authenticated user's details including their email, username, role, and the workspace they belong to."
 )
 async def get_profile_route(user: User = Depends(get_current_user)):
-    return {
-        "id": user.id,
-        "email": user.email,
-        "username": user.username,
-        "role": user.role,
-        "tenant_id": user.tenant_id,
-        "created_at": user.created_at
-    }
+    return await get_profile(user)
 
 
 @router.get(
-    '/profile/workspace',
+    "/profile/workspace",
     summary="Get current user's workspace",
-    description="Returns the details of the tenant workspace the authenticated user belongs to, including the workspace name, creation date, and active plan."
+    description="Returns the details of the workspace the authenticated user belongs to, including the workspace name, creation date, and active plan."
 )
 async def get_workspace_route(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))
-    tenant = result.scalar_one_or_none()
-
-    if not tenant:
-        raise HTTPException(status_code=404, detail='Workspace not found.')
-
-    return {
-        "id": tenant.id,
-        "name": tenant.name,
-        "created_at": tenant.created_at,
-        "plan_id": tenant.plan_id,
-    }
+    return await get_workspace(user, db)
 
 
 @router.patch(
-    '/profile',
+    "/profile",
     summary="Update current user's profile",
     description="Allows the authenticated user to update their profile information. Currently supports updating the username. Only the fields provided will be updated."
 )
@@ -59,8 +39,4 @@ async def update_profile_route(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    if form.username:
-        user.username = form.username
-
-    await db.commit()
-    return {"message": "Profile updated successfully."}
+    return await update_profile(user, db, form.username)
