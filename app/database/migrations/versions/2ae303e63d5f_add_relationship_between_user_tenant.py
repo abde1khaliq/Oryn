@@ -1,8 +1,8 @@
-"""Initial DB connection/migration
+"""Add Relationship between User, Tenant
 
-Revision ID: e0eb29dad0df
-Revises: 
-Create Date: 2026-04-09 11:17:44.345166
+Revision ID: 2ae303e63d5f
+Revises: 029c6457b1a6
+Create Date: 2026-04-09 12:30:45.734847
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e0eb29dad0df'
-down_revision: Union[str, Sequence[str], None] = None
+revision: str = '2ae303e63d5f'
+down_revision: Union[str, Sequence[str], None] = '029c6457b1a6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

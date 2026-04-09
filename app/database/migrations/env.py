@@ -8,6 +8,12 @@ from alembic import context
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
+# Importing Models
+
+from app.models.tenant import Tenant
+from app.models.user import User
+
+
 target_metadata = Base.metadata
 
 if config.config_file_name is not None:
