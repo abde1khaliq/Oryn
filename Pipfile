@@ -14,6 +14,9 @@ pydantic = {extras = ["email"], version = "*"}
 asyncpg = "*"
 passlib = {extras = ["argon2"], version = "*"}
 pyjwt = "*"
+pytest = "*"
+pytest-asyncio = "*"
+httpx = "*"
 
 [dev-packages]
 
