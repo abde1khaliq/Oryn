@@ -6,7 +6,7 @@ from app.database.session import Base
 from app.core.config import settings
 
 # Importing Models
-from app.models import Plan, User, Tenant, Invitation
+from app.models import Plan, User, Tenant, Invitation, Team
 
 config = context.config
 config.set_main_option("sqlalchemy.url", 'postgresql+asyncpg://postgres.cbudscicxqgeeoayquzk:QuPOpbOre0ghD5kk@aws-1-eu-west-2.pooler.supabase.com:5432/postgres')

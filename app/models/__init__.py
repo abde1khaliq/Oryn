@@ -2,3 +2,5 @@ from app.models.plan import Plan
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.invitation import Invitation
+from app.models.team import Team
+from app.models.team_member import TeamMember

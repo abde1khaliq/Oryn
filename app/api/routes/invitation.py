@@ -6,7 +6,7 @@ from app.database.session import get_db
 from app.schemas.invitation import InvitationForm, AcceptInvitationForm
 from app.services.invitation_service import create_invitation, validate_invitation, accept_invitation
 
-router = APIRouter(tags=["Invitations"])
+router = APIRouter()
 
 @router.post(
     '/invitations',
