@@ -6,10 +6,10 @@ from app.database.session import Base
 from app.core.config import settings
 
 # Importing Models
-from app.models import Plan, User, Tenant, Invitation, Team, Project
+from app.models import User, Tenant, Plan, Invitation, Team, TeamMember, Project, Task, Comment
 
 config = context.config
-config.set_main_option("sqlalchemy.url", 'postgresql+asyncpg://postgres.cbudscicxqgeeoayquzk:QuPOpbOre0ghD5kk@aws-1-eu-west-2.pooler.supabase.com:5432/postgres')
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -36,8 +36,7 @@ def do_migrations(connection):
 
 
 async def run_migrations_online() -> None:
-    url = 'postgresql+asyncpg://postgres.cbudscicxqgeeoayquzk:QuPOpbOre0ghD5kk@aws-1-eu-west-2.pooler.supabase.com:5432/postgres'
-    print(f"Connecting with: {url}")
+    url = settings.database_url
     connectable = create_async_engine(url, poolclass=pool.NullPool)
     async with connectable.connect() as connection:
         await connection.run_sync(do_migrations)

@@ -1,8 +1,8 @@
-"""fix user and tenant models
+"""empty message
 
-Revision ID: a48028fecf15
-Revises: 86ac74fa6bce
-Create Date: 2026-04-09 14:10:04.874850
+Revision ID: b579945cf798
+Revises: e46a6ec8a279
+Create Date: 2026-04-10 11:42:50.038065
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a48028fecf15'
-down_revision: Union[str, Sequence[str], None] = '86ac74fa6bce'
+revision: str = 'b579945cf798'
+down_revision: Union[str, Sequence[str], None] = 'e46a6ec8a279'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
