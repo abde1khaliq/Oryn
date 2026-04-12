@@ -17,6 +17,7 @@ pyjwt = "*"
 pytest = "*"
 pytest-asyncio = "*"
 httpx = "*"
+stripe = "*"
 
 [dev-packages]
 

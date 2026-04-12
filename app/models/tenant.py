@@ -1,5 +1,5 @@
 # models/tenant.py
-from sqlalchemy import Column, String, DateTime, ForeignKey, func
+from sqlalchemy import Column, String, DateTime, ForeignKey, func, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database.session import Base
@@ -17,3 +17,6 @@ class Tenant(Base):
     plan = relationship("Plan", back_populates="tenants")
     owner = relationship("User", foreign_keys=[owner_id])
     users = relationship("User", back_populates="tenant", foreign_keys="User.tenant_id")
+
+    stripe_customer_id = Column(String, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)

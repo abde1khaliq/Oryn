@@ -2,9 +2,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException
-from app.models import User, Tenant, Plan
+from app.models import User, Tenant, Plan, Subscription
 from app.core.security import verify_password, hash_password
 from app.core.jwt import create_access_token
+import stripe
 
 async def register_user(form, db: AsyncSession):
     # check if user exists
@@ -20,7 +21,10 @@ async def register_user(form, db: AsyncSession):
         raise HTTPException(status_code=500, detail="Free plan not configured.")
 
     try:
-        tenant = Tenant(name=form.company_name, plan_id=free_plan.id)
+        tenant = Tenant(
+            name=form.company_name, 
+            plan_id=free_plan.id
+        )
         db.add(tenant)
         await db.flush()
 
@@ -35,6 +39,23 @@ async def register_user(form, db: AsyncSession):
         await db.flush()
 
         tenant.owner_id = user.id
+
+        stripe_customer = stripe.Customer.create(
+            email=form.email,
+            name=form.company_name,
+            metadata={"tenant_id": str(tenant.id)}
+        )
+
+        tenant.stripe_customer_id = stripe_customer.id
+
+        subscription = Subscription(
+            tenant_id=tenant.id,
+            stripe_customer_id=stripe_customer.id,
+            plan_id=free_plan.id,
+            status="free"
+        )
+        db.add(subscription)
+        
         await db.commit()
         return user
 
