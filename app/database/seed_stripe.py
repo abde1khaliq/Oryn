@@ -1,3 +1,7 @@
+
+# This file is used to seed the Stripe with the Plans
+# The plans are fetched from the database, make sure to run seed_stripe.py first
+
 import stripe
 import asyncio
 from sqlalchemy.future import select
@@ -9,7 +13,7 @@ stripe.api_key = settings.stripe_secret_key
 
 async def seed_stripe_prices():
     async with AsyncSessionLocal() as db:
-        # fetch Pro and Enterprise plans from your DB
+        # fetch Pro and Enterprise plans from DB
         result = await db.execute(select(Plan).where(Plan.name.in_(["Pro", "Enterprise"])))
         plans = result.scalars().all()
 

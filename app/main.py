@@ -7,6 +7,7 @@ from app.api.routes.teams import router as team_router
 from app.api.routes.projects import router as project_router
 from app.api.routes.tasks import router as task_router
 from app.api.routes.comments import router as comment_router
+from app.api.routes.billing import router as billing_router
 
 app = FastAPI(title='Oryn', description="""
 A backend API where companies sign up, get their own private workspace, 
@@ -28,3 +29,4 @@ app.include_router(team_router, prefix='/workspace', tags=['Workspace Teams Endp
 app.include_router(project_router, prefix='/workspace', tags=["Team Projects"])
 app.include_router(task_router, prefix='/workspace', tags=['Tasks'])
 app.include_router(comment_router, prefix='/workspace', tags=['Comments'])
+app.include_router(billing_router)

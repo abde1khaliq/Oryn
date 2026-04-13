@@ -1,4 +1,3 @@
-# app/database/seed.py
 import asyncio
 from sqlalchemy.future import select
 from app.database.session import AsyncSessionLocal

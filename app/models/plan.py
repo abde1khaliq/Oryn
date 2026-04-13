@@ -1,4 +1,3 @@
-# models/plan.py
 from sqlalchemy import Column, String, Integer, DateTime, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
