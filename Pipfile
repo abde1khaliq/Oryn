@@ -18,6 +18,7 @@ pytest = "*"
 pytest-asyncio = "*"
 httpx = "*"
 stripe = "*"
+dotenv = "*"
 
 [dev-packages]
 
