@@ -7,6 +7,7 @@ from app.models.task import Task
 from app.models.project import Project
 from app.models.team import Team
 from app.models.user import User
+from app.models.audit_log import AuditLog
 
 async def verify_task_chain(db: AsyncSession, tenant_id: UUID, team_id: UUID, project_id: UUID, task_id: UUID):
     team_result = await db.execute(select(Team).where(Team.id == team_id, Team.tenant_id == tenant_id))
@@ -29,6 +30,17 @@ async def create_comment(db: AsyncSession, tenant_id: UUID, user_id: UUID, task:
     db.add(new_comment)
     await db.commit()
     await db.refresh(new_comment)
+
+    audit = AuditLog(
+        user_id=user_id,
+        action="create_comment",
+        resource="comment",
+        status="success",
+        details={"comment_id": str(new_comment.id), "task_id": str(task.id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return new_comment
 
 async def get_comments(db: AsyncSession, tenant_id: UUID, task: Task):
@@ -45,6 +57,17 @@ async def update_comment(db: AsyncSession, tenant_id: UUID, task_id: UUID, comme
     comment.body = body
     await db.commit()
     await db.refresh(comment)
+
+    audit = AuditLog(
+        user_id=user_id,
+        action="update_comment",
+        resource="comment",
+        status="success",
+        details={"comment_id": str(comment.id), "task_id": str(task_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return comment
 
 async def delete_comment(db: AsyncSession, tenant_id: UUID, task_id: UUID, comment_id: UUID, user: User):
@@ -56,4 +79,15 @@ async def delete_comment(db: AsyncSession, tenant_id: UUID, task_id: UUID, comme
         raise HTTPException(status_code=403, detail="You don't have permission to delete this comment.")
     await db.delete(comment)
     await db.commit()
+
+    audit = AuditLog(
+        user_id=user.id,
+        action="delete_comment",
+        resource="comment",
+        status="success",
+        details={"comment_id": str(comment_id), "task_id": str(task_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return comment

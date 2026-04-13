@@ -6,6 +6,7 @@ from app.models.task import Task
 from app.models.project import Project
 from app.models.team import Team
 from app.models.user import User
+from app.models.audit_log import AuditLog
 
 VALID_STATUSES = ["todo", "in_progress", "in_review", "done"]
 
@@ -38,6 +39,17 @@ async def create_task(db: AsyncSession, tenant_id: UUID, user_id: UUID, project:
     db.add(new_task)
     await db.commit()
     await db.refresh(new_task)
+
+    audit = AuditLog(
+        user_id=user_id,
+        action="create_task",
+        resource="task",
+        status="success",
+        details={"task_id": str(new_task.id), "project_id": str(project.id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return new_task
 
 async def get_tasks(db: AsyncSession, tenant_id: UUID, project: Project):
@@ -65,6 +77,17 @@ async def update_task(db: AsyncSession, tenant_id: UUID, project_id: UUID, task_
         task.assigned_to = form.assigned_to
     await db.commit()
     await db.refresh(task)
+
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="update_task",
+        resource="task",
+        status="success",
+        details={"task_id": str(task.id), "project_id": str(project_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return task
 
 async def update_task_status(db: AsyncSession, tenant_id: UUID, project_id: UUID, task_id: UUID, status: str):
@@ -73,6 +96,17 @@ async def update_task_status(db: AsyncSession, tenant_id: UUID, project_id: UUID
     task = await get_task(db, tenant_id, project_id, task_id)
     task.status = status
     await db.commit()
+
+    audit = AuditLog(
+        user_id=task.created_by,
+        action="update_task_status",
+        resource="task",
+        status="success",
+        details={"task_id": str(task.id), "new_status": status}
+    )
+    db.add(audit)
+    await db.commit()
+
     return task
 
 async def delete_task(db: AsyncSession, tenant_id: UUID, project_id: UUID, task_id: UUID, current_user: User):
@@ -81,4 +115,15 @@ async def delete_task(db: AsyncSession, tenant_id: UUID, project_id: UUID, task_
     task = await get_task(db, tenant_id, project_id, task_id)
     await db.delete(task)
     await db.commit()
+
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="delete_task",
+        resource="task",
+        status="success",
+        details={"task_id": str(task_id), "project_id": str(project_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return task

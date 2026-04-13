@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException
-from app.models import User, Tenant, Plan, Subscription
+from app.models import User, Tenant, Plan, Subscription, AuditLog
 from app.core.security import verify_password, hash_password
 from app.core.jwt import create_access_token
 import stripe
@@ -11,12 +11,30 @@ async def register_user(form, db: AsyncSession):
     result = await db.execute(select(User).where(User.email == form.email))
     user_exists = result.scalar_one_or_none()
     if user_exists:
+        audit = AuditLog(
+            user_id=None,
+            action="register_user",
+            resource="user",
+            status="failure",
+            details={"email": form.email, "reason": "already_exists"}
+        )
+        db.add(audit)
+        await db.commit()
         raise HTTPException(status_code=400, detail="User with this email already exists.")
 
     # fetch free plan
     plan_result = await db.execute(select(Plan).where(Plan.name == "Free"))
     free_plan = plan_result.scalar_one_or_none()
     if not free_plan:
+        audit = AuditLog(
+            user_id=None,
+            action="register_user",
+            resource="plan",
+            status="failure",
+            details={"reason": "free_plan_missing"}
+        )
+        db.add(audit)
+        await db.commit()
         raise HTTPException(status_code=500, detail="Free plan not configured.")
 
     try:
@@ -56,10 +74,30 @@ async def register_user(form, db: AsyncSession):
         db.add(subscription)
         
         await db.commit()
+
+        audit = AuditLog(
+            user_id=user.id,
+            action="register_user",
+            resource="user",
+            status="success",
+            details={"email": form.email, "tenant_id": tenant.id}
+        )
+        db.add(audit)
+        await db.commit()
+
         return user
 
     except Exception as e:
         await db.rollback()
+        audit = AuditLog(
+            user_id=None,
+            action="register_user",
+            resource="user",
+            status="failure",
+            details={"email": form.email, "error": str(e)}
+        )
+        db.add(audit)
+        await db.commit()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -69,12 +107,41 @@ async def authenticate_user(form, db: AsyncSession):
     user = result.scalar_one_or_none()
 
     if not user:
+        audit = AuditLog(
+            user_id=None,
+            action="authenticate_user",
+            resource="user",
+            status="failure",
+            details={"email": form.email, "reason": "user_not_found"}
+        )
+        db.add(audit)
+        await db.commit()
         raise HTTPException(status_code=404, detail="User with this email not found.")
 
     # Verify password
     if not verify_password(form.password, user.password_hash):
+        audit = AuditLog(
+            user_id=user.id,
+            action="authenticate_user",
+            resource="user",
+            status="failure",
+            details={"email": form.email, "reason": "invalid_password"}
+        )
+        db.add(audit)
+        await db.commit()
         raise HTTPException(status_code=401, detail="Password or email is incorrect.")
 
     # Create JWT access token
     access_token = create_access_token(user.id, user.tenant_id)
+
+    audit = AuditLog(
+        user_id=user.id,
+        action="authenticate_user",
+        resource="user",
+        status="success",
+        details={"email": form.email}
+    )
+    db.add(audit)
+    await db.commit()
+
     return access_token

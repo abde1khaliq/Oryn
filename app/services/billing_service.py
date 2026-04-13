@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from app.models.subscription import Subscription
 from app.models.tenant import Tenant
 from app.models.plan import Plan
+from app.models.audit_log import AuditLog
 from app.core.config import settings
 
 stripe.api_key = settings.stripe_secret_key
@@ -51,6 +52,16 @@ async def handle_checkout_completed(event_data: dict, db: AsyncSession):
         subscription.status = "active"
         await db.commit()
 
+        audit = AuditLog(
+            user_id=None,
+            action="checkout_completed",
+            resource="subscription",
+            status="success",
+            details={"tenant_id": tenant_id, "subscription_id": stripe_subscription_id}
+        )
+        db.add(audit)
+        await db.commit()
+
 
 async def handle_invoice_paid(event_data: dict, db: AsyncSession):
     """Fires when payment succeeds — marks subscription active."""
@@ -66,11 +77,9 @@ async def handle_invoice_paid(event_data: dict, db: AsyncSession):
 
     if subscription:
         subscription.status = "active"
-        # update period end from invoice
         period_end = invoice["lines"]["data"][0]["period"]["end"]
         subscription.current_period_end = datetime.fromtimestamp(period_end, tz=timezone.utc)
 
-        # make sure tenant is active
         tenant_result = await db.execute(
             select(Tenant).where(Tenant.id == subscription.tenant_id)
         )
@@ -78,6 +87,16 @@ async def handle_invoice_paid(event_data: dict, db: AsyncSession):
         if tenant:
             tenant.is_active = True
 
+        await db.commit()
+
+        audit = AuditLog(
+            user_id=None,
+            action="invoice_paid",
+            resource="subscription",
+            status="success",
+            details={"subscription_id": stripe_subscription_id, "tenant_id": subscription.tenant_id}
+        )
+        db.add(audit)
         await db.commit()
 
 
@@ -98,7 +117,16 @@ async def handle_payment_failed(event_data: dict, db: AsyncSession):
         subscription.status = "past_due"
         await db.commit()
 
-    # TODO: send warning email to customer_email in Phase 8 (will probably never finish this task ahaahaah)
+        audit = AuditLog(
+            user_id=None,
+            action="payment_failed",
+            resource="subscription",
+            status="failure",
+            details={"subscription_id": stripe_subscription_id, "customer_email": customer_email}
+        )
+        db.add(audit)
+        await db.commit()
+
     print(f"Payment failed for {customer_email} — send warning email here.")
 
 
@@ -117,7 +145,6 @@ async def handle_subscription_cancelled(event_data: dict, db: AsyncSession):
     if subscription:
         subscription.status = "cancelled"
 
-        # lock the workspace
         tenant_result = await db.execute(
             select(Tenant).where(Tenant.id == subscription.tenant_id)
         )
@@ -125,4 +152,14 @@ async def handle_subscription_cancelled(event_data: dict, db: AsyncSession):
         if tenant:
             tenant.is_active = False
 
+        await db.commit()
+
+        audit = AuditLog(
+            user_id=None,
+            action="subscription_cancelled",
+            resource="subscription",
+            status="success",
+            details={"subscription_id": stripe_subscription_id, "tenant_id": subscription.tenant_id}
+        )
+        db.add(audit)
         await db.commit()

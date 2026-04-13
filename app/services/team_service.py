@@ -5,12 +5,24 @@ from uuid import UUID
 from app.models.team import Team
 from app.models.team_member import TeamMember
 from app.models.user import User
+from app.models.audit_log import AuditLog
 
 async def create_team(db: AsyncSession, tenant_id: UUID, name: str):
     new_team = Team(name=name, tenant_id=tenant_id)
     db.add(new_team)
     await db.commit()
     await db.refresh(new_team)
+
+    audit = AuditLog(
+        user_id=None,
+        action="create_team",
+        resource="team",
+        status="success",
+        details={"team_id": str(new_team.id), "tenant_id": str(tenant_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return new_team
 
 async def get_all_teams(db: AsyncSession, tenant_id: UUID):
@@ -30,6 +42,17 @@ async def update_team(db: AsyncSession, tenant_id: UUID, team_id: UUID, name: st
         team.name = name
     await db.commit()
     await db.refresh(team)
+
+    audit = AuditLog(
+        user_id=None,
+        action="update_team",
+        resource="team",
+        status="success",
+        details={"team_id": str(team.id), "tenant_id": str(tenant_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return team
 
 async def delete_team(db: AsyncSession, tenant_id: UUID, team_id: UUID):
@@ -37,6 +60,17 @@ async def delete_team(db: AsyncSession, tenant_id: UUID, team_id: UUID):
     await db.execute(TeamMember.__table__.delete().where(TeamMember.team_id == team_id))
     await db.delete(team)
     await db.commit()
+
+    audit = AuditLog(
+        user_id=None,
+        action="delete_team",
+        resource="team",
+        status="success",
+        details={"team_id": str(team_id), "tenant_id": str(tenant_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return team
 
 async def add_member_to_team(db: AsyncSession, tenant_id: UUID, team_id: UUID, user_id: UUID):
@@ -53,6 +87,17 @@ async def add_member_to_team(db: AsyncSession, tenant_id: UUID, team_id: UUID, u
     membership = TeamMember(team_id=team_id, user_id=user_id, tenant_id=tenant_id)
     db.add(membership)
     await db.commit()
+
+    audit = AuditLog(
+        user_id=user_id,
+        action="add_member_to_team",
+        resource="team_member",
+        status="success",
+        details={"team_id": str(team_id), "tenant_id": str(tenant_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return user, team
 
 async def get_team_members(db: AsyncSession, tenant_id: UUID, team_id: UUID):
@@ -68,4 +113,15 @@ async def remove_team_member(db: AsyncSession, tenant_id: UUID, team_id: UUID, u
         raise HTTPException(status_code=404, detail="User is not a member of this team.")
     await db.delete(membership)
     await db.commit()
+
+    audit = AuditLog(
+        user_id=user_id,
+        action="remove_team_member",
+        resource="team_member",
+        status="success",
+        details={"team_id": str(team_id), "tenant_id": str(tenant_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return team

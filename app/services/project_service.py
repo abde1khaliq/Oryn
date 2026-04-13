@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from uuid import UUID
 from app.models.project import Project
 from app.models.team import Team
+from app.models.audit_log import AuditLog
 
 async def verify_team(db: AsyncSession, tenant_id: UUID, team_id: UUID):
     result = await db.execute(select(Team).where(Team.id == team_id, Team.tenant_id == tenant_id))
@@ -23,6 +24,17 @@ async def create_project(db: AsyncSession, tenant_id: UUID, user_id: UUID, team:
     db.add(new_project)
     await db.commit()
     await db.refresh(new_project)
+
+    audit = AuditLog(
+        user_id=user_id,
+        action="create_project",
+        resource="project",
+        status="success",
+        details={"project_id": str(new_project.id), "team_id": str(team.id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return new_project
 
 async def get_projects(db: AsyncSession, tenant_id: UUID, team: Team):
@@ -44,10 +56,32 @@ async def update_project(db: AsyncSession, tenant_id: UUID, team_id: UUID, proje
         project.description = form.description
     await db.commit()
     await db.refresh(project)
+
+    audit = AuditLog(
+        user_id=project.created_by,
+        action="update_project",
+        resource="project",
+        status="success",
+        details={"project_id": str(project.id), "team_id": str(team_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return project
 
 async def delete_project(db: AsyncSession, tenant_id: UUID, team_id: UUID, project_id: UUID):
     project = await get_project(db, tenant_id, team_id, project_id)
     await db.delete(project)
     await db.commit()
+
+    audit = AuditLog(
+        user_id=project.created_by,
+        action="delete_project",
+        resource="project",
+        status="success",
+        details={"project_id": str(project_id), "team_id": str(team_id)}
+    )
+    db.add(audit)
+    await db.commit()
+
     return project
