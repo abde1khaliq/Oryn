@@ -1,6 +1,5 @@
-import pytest
-import requests
 
-def test_health(base_url):
-    response = requests.get(f"{base_url}/health")
+
+def test_health(client):
+    response = client.get("/health")
     assert response.status_code == 200

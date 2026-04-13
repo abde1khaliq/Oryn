@@ -14,11 +14,11 @@ pydantic = {extras = ["email"], version = "*"}
 asyncpg = "*"
 passlib = {extras = ["argon2"], version = "*"}
 pyjwt = "*"
+stripe = "*"
+dotenv = "*"
 pytest = "*"
 pytest-asyncio = "*"
 httpx = "*"
-stripe = "*"
-dotenv = "*"
 
 [dev-packages]
 
