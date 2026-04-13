@@ -5,9 +5,6 @@ from alembic import context
 from app.database.session import Base
 from app.core.config import settings
 
-# Importing Models
-from app.models import User, Tenant, Plan, Invitation, Team, TeamMember, Project, Task, Comment
-
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
