@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     stripe_pro_price_id: str
     stripe_enterprise_price_id: str
 
-    class Config:
+    class ConfigDict:
         env_file = BASE_DIR / ".env"
 
 settings = Settings()

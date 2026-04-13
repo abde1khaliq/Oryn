@@ -10,5 +10,5 @@ class TenantView(BaseModel):
     plan_id: UUID
     owner_id: Optional[UUID]
 
-    class Config:
+    class ConfigDict:
         from_attribute = True
