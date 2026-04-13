@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
-from app.db import Base
+from app.database.session import Base
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

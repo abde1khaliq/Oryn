@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oryn — How It Was Built</title>
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --text-light: #666;
+      --accent: #8b5cf6;
+      --accent-dim: #f3e8ff;
+      --border: #e5e5e5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a0a0a;
+        --surface: #111111;
+        --text: #e5e5e5;
+        --text-light: #737373;
+        --accent: #a78bfa;
+        --accent-dim: #2e1065;
+        --border: #262626;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Minimal gateway */
+    .gateway {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .wordmark {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-light);
+    }
+
+    .doc-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .doc-links a {
+      text-decoration: none;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .doc-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Content */
+    article {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 10rem 2rem 8rem;
+    }
+
+    h1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 3rem;
+      font-weight: 400;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .lede {
+      font-size: 1.25rem;
+      color: var(--text-light);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    /* Action buttons */
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 4rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .action-btn {
+      padding: 0.6rem 1.2rem;
+      text-decoration: none;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      background: transparent;
+    }
+
+    .action-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    h2 {
+      font-family: Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      margin: 4rem 0 1.5rem;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      margin: 3rem 0 1rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    /* Purple accent block */
+    .note {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      padding: 2rem;
+      margin: 2.5rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .note p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Simple purple details */
+    .detail {
+      margin: 1.5rem 0;
+      padding-left: 1.5rem;
+      border-left: 2px solid var(--border);
+      transition: border-color 0.3s;
+    }
+
+    .detail:hover {
+      border-left-color: var(--accent);
+    }
+
+    .detail strong {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--text);
+    }
+
+    .detail span {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    /* Meta */
+    .meta {
+      margin-top: 5rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    @media (max-width: 640px) {
+      article {
+        padding: 8rem 1.5rem 6rem;
+      }
+      
+      h1 {
+        font-size: 2.25rem;
+      }
+      
+      .gateway {
+        padding: 1.5rem;
+      }
+
+      .actions {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="gateway">
+    <div class="wordmark">Oryn</div>
+    <div class="doc-links">
+      <a href="/docs">Swagger</a>
+      <a href="/redoc">Docs</a>
+    </div>
+  </div>
+
+  <article>
+    <h1>Oryn</h1>
+    
+    <p class="lede">
+      An exercise in building multi-tenant architecture—how I learned to isolate data, 
+      manage subscriptions, and think in layers rather than features.
+    </p>
+
+    <div class="actions">
+      <a href="/docs" class="action-btn">Swagger UI</a>
+      <a href="/redoc" class="action-btn">ReDoc</a>
+      <a href="https://github.com/yourusername/oryn" class="action-btn" target="_blank">GitHub</a>
+    </div>
+
+    <h3>Context</h3>
+    
+    <p>
+      I set out to understand how modern SaaS platforms (Linear, Notion, Figma) serve thousands 
+      of companies from a single codebase while keeping data strictly separated. Not by reading 
+      about it—by building the infrastructure myself.
+    </p>
+
+    <p>
+      The result is Oryn: a backend API where companies sign up, get provisioned an isolated 
+      workspace, and manage projects internally. Two levels—Tenant and User—with boundaries 
+      enforced at every layer.
+    </p>
+
+    <div class="note">
+      <p>
+        <strong>This is the largest project I've built</strong> not by LOC count, but by discipline. 
+        I used Claude Code and Copilot to plan infrastructure before writing imports, challenging 
+        assumptions rather than generating code. Also built this interface with Kimi to document the journey.
+      </p>
+    </div>
+
+    <h2>How It Was Built</h2>
+
+    <p>
+      I started with the database. Multi-tenancy offers three paths: shared schema, isolated schema, 
+      or isolated databases. I chose shared database with row-level security—enforcing tenant isolation 
+      at the application layer through strict query scoping.
+    </p>
+
+    <div class="detail">
+      <strong>Authentication & Isolation</strong>
+      JWT tokens carry tenant context. FastAPI dependencies inject this into sessions, 
+      automatically scoping every query with tenant_id filters.
+      <br><span>PyJWT • FastAPI Depends • SQLAlchemy</span>
+    </div>
+
+    <div class="detail">
+      <strong>Subscription Infrastructure</strong>
+      Full Stripe integration with webhook handling for subscription events, usage tracking, 
+      and tier enforcement at the middleware level.
+      <br><span>stripe-python • Webhooks • Async handlers</span>
+    </div>
+
+    <div class="detail">
+      <strong>Audit Logging</strong>
+      Immutable records of who did what, when. Built into the base repository class so 
+      every operation is tracked by default, not as an afterthought.
+      <br><span>PostgreSQL triggers • Append-only tables</span>
+    </div>
+
+    <div class="detail">
+      <strong>Async Architecture</strong>
+      Fully async database operations using asyncpg and SQLAlchemy 2.0. No synchronous 
+      blocking in the hot path.
+      <br><span>asyncpg • asyncio • Connection pooling</span>
+    </div>
+
+    <h2>What I Learned</h2>
+
+    <p>
+      <strong>Planning is cheaper than refactoring.</strong> Two days whiteboarding database 
+      relationships saved weeks of migration headaches. The upfront cost of thinking through 
+      foreign key constraints and cascade behaviors paid for itself immediately.
+    </p>
+
+    <p>
+      <strong>Audit logs are infrastructure, not features.</strong> When built into the base 
+      class, tracking is automatic and comprehensive. When added later, it's patchy and unreliable.
+    </p>
+
+    <p>
+      <strong>Multi-tenancy is a business logic concern.</strong> Deciding where to enforce 
+      boundaries—database, application, or both—affects every query you write. I chose application 
+      layer enforcement with database constraints as backup.
+    </p>
+
+    <p>
+      On testing: I abandoned automated testing for this project, relying solely on Postman. 
+      Not proud of this—automated testing would have caught edge cases earlier. Next project, 
+      testing comes first, not last.
+    </p>
+
+    <div class="meta">
+      <p>
+        This is a learning project. It runs real payment logic in Stripe test mode and follows 
+        production patterns, but includes no database security hardening. A reference implementation, 
+        not a production service.
+      </p>
+      <p style="margin-top: 1rem; font-style: normal; font-weight: 600; color: var(--text);">
+        Built with FastAPI, PostgreSQL, and patience.
+      </p>
+    </div>
+  </article>
+
+</body>
+</html>

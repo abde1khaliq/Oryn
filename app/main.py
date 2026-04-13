@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from app.api.routes.auth import router as auth_router
 from app.api.routes.tenant import router as tenant_router
 from app.api.routes.invitation import router as invitation_router
@@ -20,6 +21,13 @@ async def health_check():
         "status": "healthy",
         "app": "Oryn"
     }
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    with open("app/static/interface.html") as f:
+        return f.read()
+
 
 app.include_router(auth_router, prefix='/auth', tags=['Authentication Layer'])
 app.include_router(profile_router, tags=["Profile"])
