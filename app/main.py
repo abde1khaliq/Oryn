@@ -29,4 +29,4 @@ app.include_router(team_router, prefix='/workspace', tags=['Workspace Teams Endp
 app.include_router(project_router, prefix='/workspace', tags=["Team Projects"])
 app.include_router(task_router, prefix='/workspace', tags=['Tasks'])
 app.include_router(comment_router, prefix='/workspace', tags=['Comments'])
-app.include_router(billing_router)
+app.include_router(billing_router, prefix="/billing", tags=["Billing"])

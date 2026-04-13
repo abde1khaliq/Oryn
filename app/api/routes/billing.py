@@ -17,7 +17,7 @@ from app.services.billing_service import (
 
 stripe.api_key = settings.stripe_secret_key
 
-router = APIRouter(prefix="/billing", tags=["Billing"])
+router = APIRouter()
 
 
 @router.post(
