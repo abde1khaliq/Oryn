@@ -16,10 +16,6 @@ passlib = {extras = ["argon2"], version = "*"}
 pyjwt = "*"
 stripe = "*"
 dotenv = "*"
-pytest = "*"
-httpx = "*"
-pytest-asyncio = "*"
-aiosqlite = "*"
 
 [dev-packages]
 
