@@ -17,8 +17,9 @@ pyjwt = "*"
 stripe = "*"
 dotenv = "*"
 pytest = "*"
-pytest-asyncio = "*"
 httpx = "*"
+pytest-asyncio = "*"
+aiosqlite = "*"
 
 [dev-packages]
 
