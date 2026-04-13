@@ -15,19 +15,18 @@ A backend API where companies sign up, get their own private workspace,
 and inside it they manage their teams, projects, and tasks — think a simplified Jira or Asana.
 """)
 
+@app.get("/", response_class=HTMLResponse, tags=['Oryn Interface'])
+async def root():
+    with open("app/static/interface.html") as f:
+        return f.read()
+
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {
         "status": "healthy",
         "app": "Oryn"
     }
-
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    with open("app/static/interface.html") as f:
-        return f.read()
-
 
 app.include_router(auth_router, prefix='/auth', tags=['Authentication Layer'])
 app.include_router(profile_router, tags=["Profile"])
