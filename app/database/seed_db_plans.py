@@ -18,8 +18,6 @@ async def seed_plans():
                 price=0,
                 features={
                     "task_comments": False,
-                    "audit_logs": False,
-                    "api_access": False
                 },
                 limits={
                     "members": 3,
@@ -32,8 +30,6 @@ async def seed_plans():
                 price=4900,
                 features={
                     "task_comments": True,
-                    "audit_logs": True,
-                    "api_access": False
                 },
                 limits={
                     "members": -1,
@@ -46,8 +42,6 @@ async def seed_plans():
                 price=19900,
                 features={
                     "task_comments": True,
-                    "audit_logs": True,
-                    "api_access": True
                 },
                 limits={
                     "members": -1,
