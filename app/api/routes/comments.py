@@ -9,6 +9,7 @@ from app.services.comment_service import (
     verify_task_chain, create_comment, get_comments,
     update_comment, delete_comment
 )
+from app.api.dependencies import require_feature
 
 router = APIRouter(
     prefix="/teams/{team_id}/projects/{project_id}/tasks/{task_id}/comments",
@@ -26,7 +27,8 @@ async def create_comment_route(
     project_id: UUID, 
     task_id: UUID, 
     current_user: User = Depends(get_current_user), 
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_feature("task_comments")),
 ):
     task = await verify_task_chain(db, current_user.tenant_id, team_id, project_id, task_id)
     comment = await create_comment(db, current_user.tenant_id, current_user.id, task, form.body)

@@ -9,6 +9,7 @@ from app.services.project_service import (
     verify_team, create_project, get_projects,
     get_project, update_project, delete_project
 )
+from app.services.plan_enforcement import enforce_project_limit
 
 router = APIRouter(prefix="/teams/{team_id}/projects")
 
@@ -25,6 +26,8 @@ async def create_project_route(
 ):
     if current_user.role not in ["owner", "admin"]:
         raise HTTPException(status_code=403, detail="Only owners and admins can create projects.")
+
+    await enforce_project_limit(current_user.tenant_id, db)
     team = await verify_team(db, current_user.tenant_id, team_id)
     project = await create_project(db, current_user.tenant_id, current_user.id, team, form)
     return {"message": "Project created successfully.", "project": {"id": project.id, "name": project.name}}

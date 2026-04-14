@@ -9,6 +9,7 @@ from app.services.team_service import (
     create_team, get_all_teams, get_team, update_team,
     delete_team, add_member_to_team, get_team_members, remove_team_member
 )
+from app.services.plan_enforcement import enforce_team_limit
 
 router = APIRouter()
 
@@ -20,6 +21,8 @@ router = APIRouter()
 async def create_team_route(form: TeamCreationForm, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if current_user.role != "owner":
         raise HTTPException(status_code=403, detail="Only owners can create teams.")
+
+    await enforce_team_limit(current_user.tenant_id, db)    
     team = await create_team(db, current_user.tenant_id, form.name)
     return {"message": "Team created successfully.", "team": {"id": team.id, "name": team.name}}
 
