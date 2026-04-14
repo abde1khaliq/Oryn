@@ -32,7 +32,31 @@ At the end of the day a company fully relies on Oryn's infrastructure to secure 
 | Pydantic           | Validation & settings              |
 | PyJWT              | Auth tokens                        |
 | Docker             | Local development environment      |
-| Railway / Render   | Deployment                         |
+| Railway / Render   | Deployment                         |\
+
+## Project Structure
+
+```
+app/
+├── api/
+│   ├── routes/        # all endpoint handlers
+│   └── dependencies.py
+├── core/
+│   ├── config.py      # environment variables
+│   └── security.py    # password hashing
+│   └── jwt.py         # jwt encoding & decoding
+├── database/
+│   ├── migrations/    # contains all the migration history
+│   ├── session.py     # async SQLAlchemy setup
+│   ├── seed.py        # plan seeder
+│   └── seed_stripe.py # Stripe product seeder
+├── models/            # SQLAlchemy table definitions
+├── schemas/           # Pydantic request/response shapes
+├── services/          # business logic
+├── static/            # has the interface of the API
+└── main.py
+```
+
 ## Oryn's infrastructure
 
 ![OrynS](https://i.postimg.cc/mZQH1t8b/oryn-whiteboard.png)
@@ -46,7 +70,7 @@ To run this project, you will need to add the following environment variables to
 DATABASE_URL= # Supports Postgres only
 SECRET_KEY=
 ALGORITHM=HS256
-BACKEND_URL=https://128.0.0.1:8000/ # only for development, may change for production
+BACKEND_URL=http://127.0.0.1:8000/ # only for development, may change for production
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 STRIPE_PRO_PRICE_ID=
@@ -89,10 +113,46 @@ cd oryn
 Build & run the backend image with a descriptive tag:
 
 ```bash
+# Build and run the container
 docker build -t oryn .
 docker run -d --name oryn -p 8000:8000 --env-file .env oryn
+
+# Run migrations
 docker exec -it oryn alembic upgrade head
+
+# Seed plans
+docker exec -it oryn python -m app.database.seed
+
+# Seed Stripe products
+docker exec -it oryn python -m app.database.seed_stripe
+
 ```
+
+## Stripe Webhooks (Local Development)
+
+Install the [Stripe CLI](https://stripe.com/docs/stripe-cli) then run:
+
+```bash
+stripe login
+stripe listen --forward-to localhost:8000/billing/webhook
+```
+
+Copy the `whsec_...` secret it prints and set it as `STRIPE_WEBHOOK_SECRET` in your `.env`.
+
+## API Overview
+
+| Group | Endpoints |
+|---|---|
+| Auth | Register, Login |
+| Profile | Get profile, Get workspace, Update profile |
+| Invitations | Create invite link, Validate token, Accept invite |
+| Teams | Full CRUD + member management |
+| Projects | Full CRUD scoped under teams |
+| Tasks | Full CRUD + status flow scoped under projects |
+| Comments | Full CRUD scoped under tasks |
+| Billing | Checkout, Subscription status, Stripe webhook |
+
+Full interactive docs available at `/docs` once the server is running.
 
 ## API Docs
 Interactive documentation is available once the server is running:
