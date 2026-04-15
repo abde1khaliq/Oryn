@@ -5,6 +5,8 @@ from alembic import context
 from app.database.session import Base
 from app.core.config import settings
 
+import app.models
+
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
@@ -12,7 +14,6 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
-
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")

@@ -13,6 +13,6 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default="member")
     created_at = Column(DateTime, server_default=func.now())
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey('tenants.id'), nullable=True)
 
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('tenants.id'), nullable=True)
     tenant = relationship("Tenant", back_populates="users", foreign_keys=[tenant_id])

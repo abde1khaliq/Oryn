@@ -89,10 +89,22 @@ STRIPE_ENTERPRISE_PRICE_ID=
 ### Setup
 ```bash
 git clone https://github.com/abde1khaliq/oryn
+
+# Go to project directory
 cd oryn
+
+# Setup the virtual environment
 pipenv install
 pipenv shell
+
+# Migrate the database
 alembic upgrade head
+
+# Seed The Database with the plans & Then seed your stripe products
+python -m app.database.seed_db_plans
+python -m app.database.seed_stripe
+
+# Run the server
 uvicorn app.main:app --reload
 ```
 
@@ -121,7 +133,7 @@ docker run -d --name oryn -p 8000:8000 --env-file .env oryn
 docker exec -it oryn alembic upgrade head
 
 # Seed plans
-docker exec -it oryn python -m app.database.seed
+docker exec -it oryn python -m app.database.seed_db_plans
 
 # Seed Stripe products
 docker exec -it oryn python -m app.database.seed_stripe
