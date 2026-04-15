@@ -9,11 +9,15 @@ from app.api.routes.projects import router as project_router
 from app.api.routes.tasks import router as task_router
 from app.api.routes.comments import router as comment_router
 from app.api.routes.billing import router as billing_router
+from app.core.limiter import limiter, rate_limit_handler, RateLimitError
 
 app = FastAPI(title='Oryn', description="""
 A backend API where companies sign up, get their own private workspace, 
 and inside it they manage their teams, projects, and tasks — think a simplified Jira or Asana.
 """)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitError, rate_limit_handler)
 
 @app.get("/", response_class=HTMLResponse, tags=['Oryn Interface'])
 async def root():

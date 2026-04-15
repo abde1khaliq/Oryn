@@ -1,12 +1,13 @@
-import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+import stripe
 from app.database.session import get_db
 from app.api.dependencies import get_current_user
 from app.models.user import User
 from app.models.subscription import Subscription
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.services.billing_service import (
     create_checkout_session,
     handle_checkout_completed,
@@ -25,7 +26,9 @@ router = APIRouter()
     summary="Create a checkout session",
     description="Creates a Stripe checkout session for the given plan. Returns a URL to redirect the user to Stripe's hosted payment page."
 )
+@limiter.limit("5/minute")
 async def create_checkout_route(
+    request: Request,
     plan_name: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -57,7 +60,9 @@ async def create_checkout_route(
     summary="Get subscription status",
     description="Returns the current subscription status for the authenticated user's workspace."
 )
+@limiter.limit("5/minute")
 async def get_subscription_route(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -77,12 +82,14 @@ async def get_subscription_route(
 
 
 @router.get("/success", summary="Billing success redirect")
-async def billing_success():
+@limiter.limit("5/minute")
+async def billing_success(request: Request):
     return {"message": "Subscription activated successfully. Welcome to Oryn Pro."}
 
 
 @router.get("/cancel", summary="Billing cancel redirect")
-async def billing_cancel():
+@limiter.limit("5/minute")
+async def billing_cancel(request: Request):
     return {"message": "Checkout cancelled. Your free plan remains active."}
 
 
@@ -91,6 +98,7 @@ async def billing_cancel():
     summary="Stripe webhook receiver",
     description="Receives and processes Stripe webhook events. Do not call this directly."
 )
+@limiter.limit("5/minute")
 async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")

@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
@@ -6,6 +6,7 @@ from app.database.session import get_db
 from app.api.dependencies import get_current_user
 from app.schemas.tenant import TenantDetailView, PlanView, TenantBase
 from app.models import Tenant, User, Plan, Team, Project
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -18,7 +19,9 @@ router = APIRouter()
     This includes workspace metadata such as name, plan, and owner.
     """
 )
+@limiter.limit("5/minute")
 async def get_tenant_info(
+    request: Request,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):

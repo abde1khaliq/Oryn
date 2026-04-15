@@ -45,6 +45,7 @@ app/
 │   ├── config.py      # environment variables
 │   └── security.py    # password hashing
 │   └── jwt.py         # jwt encoding & decoding
+│   └── limiter.py     # Rate limiting Config file
 ├── database/
 │   ├── migrations/    # contains all the migration history
 │   ├── session.py     # async SQLAlchemy setup

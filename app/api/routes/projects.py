@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.api.dependencies import get_current_user
 from app.models.user import User
 from app.database.session import get_db
 from app.schemas.project import ProjectCreationForm, ProjectUpdateForm, ProjectView
+from app.services.plan_enforcement import enforce_project_limit
+from app.core.limiter import limiter
 from app.services.project_service import (
     verify_team, create_project, get_projects,
     get_project, update_project, delete_project
 )
-from app.services.plan_enforcement import enforce_project_limit
 
 router = APIRouter(prefix="/teams/{team_id}/projects")
 
@@ -18,7 +19,9 @@ router = APIRouter(prefix="/teams/{team_id}/projects")
     summary="Create a project", 
     description="Creates a new project inside a specific team. Only owners and admins can create projects."
 )
+@limiter.limit("5/minute")
 async def create_project_route(
+    request: Request,
     form: ProjectCreationForm, 
     team_id: UUID, 
     current_user: User = Depends(get_current_user), 
@@ -37,7 +40,9 @@ async def create_project_route(
     summary="Get all projects in a team", 
     description="Returns all projects belonging to a specific team within the authenticated user's workspace."
 )
+@limiter.limit("5/minute")
 async def get_team_projects_route(
+    request: Request,
     team_id: UUID, 
     current_user: User = Depends(get_current_user), 
     db: AsyncSession = Depends(get_db)
@@ -62,7 +67,9 @@ async def get_team_projects_route(
     summary="Get a project", 
     description="Returns details of a specific project inside a team."
 )
+@limiter.limit("5/minute")
 async def get_project_route(
+    request: Request,
     team_id: UUID, 
     project_id: UUID, 
     current_user: User = Depends(get_current_user), 
@@ -76,7 +83,9 @@ async def get_project_route(
     summary="Update a project", 
     description="Updates a project's name or description. Only owners and admins can edit projects."
 )
+@limiter.limit("5/minute")
 async def update_project_route(
+    request: Request,
     form: ProjectUpdateForm, 
     team_id: UUID, 
     project_id: UUID, 
@@ -94,7 +103,9 @@ async def update_project_route(
     summary="Delete a project", 
     description="Permanently deletes a project and all its tasks. Only owners can delete projects."
 )
+@limiter.limit("5/minute")
 async def delete_project_route(
+    request: Request,
     team_id: UUID, 
     project_id: UUID, 
     current_user: User = Depends(get_current_user), 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.api.dependencies import get_current_user
@@ -10,6 +10,7 @@ from app.services.team_service import (
     delete_team, add_member_to_team, get_team_members, remove_team_member
 )
 from app.services.plan_enforcement import enforce_team_limit
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -18,7 +19,8 @@ router = APIRouter()
     summary="Create a team", 
     description="Creates a new team inside the authenticated user's workspace. Only owners can create teams. Team names must be unique within the same workspace."
 )
-async def create_team_route(form: TeamCreationForm, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def create_team_route(request: Request, form: TeamCreationForm, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if current_user.role != "owner":
         raise HTTPException(status_code=403, detail="Only owners can create teams.")
 
@@ -31,7 +33,8 @@ async def create_team_route(form: TeamCreationForm, current_user: User = Depends
     summary="Get all teams", 
     description="Returns all teams belonging to the authenticated user's workspace."
 )
-async def get_all_teams_route(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def get_all_teams_route(request: Request, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     teams = await get_all_teams(db, current_user.tenant_id)
     return {"teams": [{"id": t.id, "name": t.name, "created_at": t.created_at} for t in teams]}
 
@@ -41,7 +44,8 @@ async def get_all_teams_route(current_user: User = Depends(get_current_user), db
     summary="Get a team", 
     description="Returns details of a specific team within the authenticated user's workspace."
 )
-async def get_team_route(team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def get_team_route(request: Request, team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await get_team(db, current_user.tenant_id, team_id)
 
 @router.patch(
@@ -49,7 +53,8 @@ async def get_team_route(team_id: UUID, current_user: User = Depends(get_current
     summary="Update a team", 
     description="Updates the name of an existing team. Only owners can edit teams."
 )
-async def update_team_route(form: TeamUpdateForm, team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def update_team_route(request: Request, form: TeamUpdateForm, team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if current_user.role != "owner":
         raise HTTPException(status_code=403, detail="Only owners can edit teams.")
     team = await update_team(db, current_user.tenant_id, team_id, form.name)
@@ -60,7 +65,8 @@ async def update_team_route(form: TeamUpdateForm, team_id: UUID, current_user: U
     summary="Delete a team", 
     description="Permanently deletes a team and removes all its members. Only owners can delete teams."
 )
-async def delete_team_route(team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def delete_team_route(request: Request, team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if current_user.role != "owner":
         raise HTTPException(status_code=403, detail="Only owners can delete teams.")
     team = await delete_team(db, current_user.tenant_id, team_id)
@@ -71,7 +77,8 @@ async def delete_team_route(team_id: UUID, current_user: User = Depends(get_curr
     summary="Add a member to a team", 
     description="Adds an existing workspace member to a team. Only owners can add members. The user must already belong to the same workspace."
 )
-async def add_team_member_route(form: AddMemberToTeamForm, team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def add_team_member_route(request: Request, form: AddMemberToTeamForm, team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if current_user.role != "owner":
         raise HTTPException(status_code=403, detail="Only owners can add members to teams.")
     user, team = await add_member_to_team(db, current_user.tenant_id, team_id, form.user_id)
@@ -82,7 +89,8 @@ async def add_team_member_route(form: AddMemberToTeamForm, team_id: UUID, curren
     summary="Get all members of a team", 
     description="Returns all members belonging to a specific team within the authenticated user's workspace."
 )
-async def get_team_members_route(team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def get_team_members_route(request: Request, team_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     team, members = await get_team_members(db, current_user.tenant_id, team_id)
     return {"team": team.name, "members": [{"id": m.id, "username": m.username, "email": m.email, "role": m.role} for m in members]}
 
@@ -91,7 +99,8 @@ async def get_team_members_route(team_id: UUID, current_user: User = Depends(get
     summary="Remove a member from a team", 
     description="Removes a user from a team. Only owners can remove members."
 )
-async def remove_team_member_route(team_id: UUID, user_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def remove_team_member_route(request: Request, team_id: UUID, user_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if current_user.role != "owner":
         raise HTTPException(status_code=403, detail="Only owners can remove members from teams.")
     team = await remove_team_member(db, current_user.tenant_id, team_id, user_id)

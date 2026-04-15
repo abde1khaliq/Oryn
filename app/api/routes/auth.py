@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.schemas.auth import RegistrationForm, LoginForm
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas.auth import RegistrationForm, LoginForm
 from app.database.session import get_db
 from app.services.auth_service import register_user, authenticate_user
-
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -16,7 +16,8 @@ router = APIRouter()
     and returns the created user details.
     """
 )
-async def register_route(form: RegistrationForm, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register_route(request: Request, form: RegistrationForm, db: AsyncSession = Depends(get_db)):
     """
     Register a new Workspace and owner user.
     """
@@ -32,7 +33,8 @@ async def register_route(form: RegistrationForm, db: AsyncSession = Depends(get_
     Returns a JWT access token if credentials are valid.
     """
 )
-async def authenticate_user_route(form: LoginForm, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def authenticate_user_route(request: Request, form: LoginForm, db: AsyncSession = Depends(get_db)):
     """
     Authenticate user and return JWT access token.
     """

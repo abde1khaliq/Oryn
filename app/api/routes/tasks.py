@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.api.dependencies import get_current_user
@@ -9,6 +9,7 @@ from app.services.task_service import (
     verify_project_chain, create_task, get_tasks, get_task,
     update_task, update_task_status, delete_task
 )
+from app.core.limiter import limiter
 
 router = APIRouter(
     prefix="/teams/{team_id}/projects/{project_id}/tasks",
@@ -20,7 +21,9 @@ router = APIRouter(
     summary="Create a task", 
     description="Creates a new task inside a project. All workspace members can create tasks. The assignee must be a member of the same workspace."
 )
+@limiter.limit("5/minute")
 async def create_task_route(
+    request: Request,
     form: TaskCreationForm, 
     team_id: UUID, 
     project_id: UUID, 
@@ -36,7 +39,9 @@ async def create_task_route(
     summary="Get all tasks in a project", 
     description="Returns all tasks belonging to a specific project."
 )
+@limiter.limit("5/minute")
 async def get_project_tasks_route(
+    request: Request,
     team_id: UUID, 
     project_id: UUID, 
     current_user: User = Depends(get_current_user), 
@@ -64,7 +69,9 @@ async def get_project_tasks_route(
     summary="Get a task", 
     description="Returns details of a specific task inside a project."
 )
+@limiter.limit("5/minute")
 async def get_task_route(
+    request: Request,
     team_id: UUID, 
     project_id: UUID, 
     task_id: UUID, 
@@ -79,7 +86,9 @@ async def get_task_route(
     summary="Update a task", 
     description="Updates a task's title, description, or assignee."
 )
+@limiter.limit("5/minute")
 async def update_task_route(
+    request: Request,
     form: TaskUpdateForm, 
     team_id: UUID, 
     project_id: UUID, 
@@ -96,7 +105,9 @@ async def update_task_route(
     summary="Update task status", 
     description="Updates the status of a task. Valid statuses are: todo, in_progress, in_review, done."
 )
+@limiter.limit("5/minute")
 async def update_task_status_route(
+    request: Request,
     form: TaskStatusUpdateForm, 
     team_id: UUID, 
     project_id: UUID, 
@@ -113,7 +124,9 @@ async def update_task_status_route(
     summary="Delete a task", 
     description="Permanently deletes a task. Only owners and admins can delete tasks."
 )
+@limiter.limit("5/minute")
 async def delete_task_route(
+    request: Request,
     team_id: UUID, 
     project_id: UUID, 
     task_id: UUID, 
