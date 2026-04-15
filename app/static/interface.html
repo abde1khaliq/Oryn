@@ -42,20 +42,32 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Minimal gateway */
+    /* Minimal gateway with logo */
     .gateway {
       position: fixed;
       top: 0;
       right: 0;
       left: 0;
-      padding: 2rem;
+      padding: 1.5rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       z-index: 10;
     }
 
-    .wordmark {
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo img {
+      height: 32px;
+      width: auto;
+      display: block;
+    }
+
+    .logo-text {
       font-weight: 600;
       font-size: 1rem;
       color: var(--text-light);
@@ -206,7 +218,11 @@
       }
       
       .gateway {
-        padding: 1.5rem;
+        padding: 1rem 1.5rem;
+      }
+
+      .logo img {
+        height: 28px;
       }
 
       .actions {
@@ -218,7 +234,9 @@
 <body>
 
   <div class="gateway">
-    <div class="wordmark">Oryn</div>
+    <div class="logo">
+      <span class="logo-text">Oryn</span>
+    </div>
     <div class="doc-links">
       <a href="/docs">Swagger</a>
       <a href="/redoc">Docs</a>
@@ -226,8 +244,13 @@
   </div>
 
   <article>
-    <h1>Oryn</h1>
-    
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+  <img src="https://i.postimg.cc/1tjLcN2Y/Copilot-20260415-094826.png" 
+       alt="Oryn" 
+       style="width: 35px; height: 35px; display: block;">
+  <h1 style="margin: 0; font-size: 40px; line-height: 1">Oryn</h1>
+</div>
+
     <p class="lede">
       An exercise in building multi-tenant architecture—how I learned to isolate data, 
       manage subscriptions, and think in layers rather than features.
@@ -236,7 +259,7 @@
     <div class="actions">
       <a href="/docs" class="action-btn">Swagger UI</a>
       <a href="/redoc" class="action-btn">ReDoc</a>
-      <a href="https://github.com/yourusername/oryn" class="action-btn" target="_blank">GitHub</a>
+      <a href="https://github.com/abde1khaliq/oryn" class="action-btn" target="_blank">GitHub</a>
     </div>
 
     <h3>Context</h3>
