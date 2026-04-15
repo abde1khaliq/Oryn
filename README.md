@@ -60,7 +60,7 @@ app/
 
 ## Oryn's infrastructure
 
-![OrynS](https://i.postimg.cc/mZQH1t8b/oryn-whiteboard.png)
+![Oryn](https://i.postimg.cc/mZQH1t8b/oryn-whiteboard.png)
 
 
 ## Environment Variables
