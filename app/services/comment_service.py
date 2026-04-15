@@ -44,7 +44,11 @@ async def create_comment(db: AsyncSession, tenant_id: UUID, user_id: UUID, task:
     return new_comment
 
 async def get_comments(db: AsyncSession, tenant_id: UUID, task: Task):
-    result = await db.execute(select(Comment).where(Comment.task_id == task.id, Comment.tenant_id == tenant_id).order_by(Comment.created_at.asc()))
+    result = await db.execute(
+        select(Comment)
+        .where(Comment.task_id == task.id, Comment.tenant_id == tenant_id)
+        .order_by(Comment.created_at.asc())
+    )
     return result.scalars().all()
 
 async def update_comment(db: AsyncSession, tenant_id: UUID, task_id: UUID, comment_id: UUID, user_id: UUID, body: str):

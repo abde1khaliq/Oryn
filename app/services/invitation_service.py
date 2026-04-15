@@ -33,7 +33,7 @@ async def create_invitation(db: AsyncSession, tenant_id: str, user_id: str, max_
         action="create_invitation",
         resource="invitation",
         status="success",
-        details={"tenant_id": tenant_id, "token": token}
+        details={"tenant_id": str(tenant_id), "token": token}
     )
     db.add(audit)
     await db.commit()
@@ -94,7 +94,11 @@ async def accept_invitation(db: AsyncSession, token: str, email: str, username: 
             action="accept_invitation",
             resource="user",
             status="failure",
-            details={"email": email, "tenant_id": invitation.tenant_id, "reason": "email_exists"}
+            details={
+                "email": email,
+                "tenant_id": str(invitation.tenant_id),
+                "reason": "email_exists"
+            }
         )
         db.add(audit)
         await db.commit()
@@ -117,7 +121,7 @@ async def accept_invitation(db: AsyncSession, token: str, email: str, username: 
         action="accept_invitation",
         resource="user",
         status="success",
-        details={"email": email, "tenant_id": invitation.tenant_id}
+        details={"email": email, "tenant_id": str(invitation.tenant_id)}
     )
     db.add(audit)
     await db.commit()

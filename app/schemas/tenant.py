@@ -13,9 +13,7 @@ class TenantBase(BaseModel):
         from_attributes = True
 
 class PlanView(BaseModel):
-    id: UUID
     name: str
-    description: Optional[str]
 
     class ConfigDict:
         from_attributes = True

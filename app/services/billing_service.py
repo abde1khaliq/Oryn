@@ -30,7 +30,7 @@ async def create_checkout_session(tenant_id, stripe_customer_id: str, plan_name:
         line_items=[{"price": price_id, "quantity": 1}],
         success_url=f"{settings.backend_url}/billing/success",
         cancel_url=f"{settings.backend_url}/billing/cancel",
-        metadata={"tenant_id": str(tenant_id)}
+        metadata={"tenant_id": str(tenant_id)}  # UUID → str
     )
 
     return session.url
@@ -57,7 +57,10 @@ async def handle_checkout_completed(event_data: dict, db: AsyncSession):
             action="checkout_completed",
             resource="subscription",
             status="success",
-            details={"tenant_id": tenant_id, "subscription_id": stripe_subscription_id}
+            details={
+                "tenant_id": str(tenant_id),
+                "subscription_id": stripe_subscription_id
+            }
         )
         db.add(audit)
         await db.commit()
@@ -94,7 +97,10 @@ async def handle_invoice_paid(event_data: dict, db: AsyncSession):
             action="invoice_paid",
             resource="subscription",
             status="success",
-            details={"subscription_id": stripe_subscription_id, "tenant_id": subscription.tenant_id}
+            details={
+                "subscription_id": stripe_subscription_id,
+                "tenant_id": str(subscription.tenant_id)
+            }
         )
         db.add(audit)
         await db.commit()
@@ -122,7 +128,10 @@ async def handle_payment_failed(event_data: dict, db: AsyncSession):
             action="payment_failed",
             resource="subscription",
             status="failure",
-            details={"subscription_id": stripe_subscription_id, "customer_email": customer_email}
+            details={
+                "subscription_id": stripe_subscription_id,
+                "customer_email": customer_email
+            }
         )
         db.add(audit)
         await db.commit()
@@ -159,7 +168,10 @@ async def handle_subscription_cancelled(event_data: dict, db: AsyncSession):
             action="subscription_cancelled",
             resource="subscription",
             status="success",
-            details={"subscription_id": stripe_subscription_id, "tenant_id": subscription.tenant_id}
+            details={
+                "subscription_id": stripe_subscription_id,
+                "tenant_id": str(subscription.tenant_id)
+            }
         )
         db.add(audit)
         await db.commit()

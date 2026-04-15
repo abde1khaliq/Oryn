@@ -60,7 +60,7 @@ async def register_user(form, db: AsyncSession):
         stripe_customer = stripe.Customer.create(
             email=form.email,
             name=form.company_name,
-            metadata={"tenant_id": str(tenant.id)}
+            metadata={"tenant_id": str(tenant.id)}  # UUID → str
         )
 
         tenant.stripe_customer_id = stripe_customer.id
@@ -80,7 +80,7 @@ async def register_user(form, db: AsyncSession):
             action="register_user",
             resource="user",
             status="success",
-            details={"email": form.email, "tenant_id": tenant.id}
+            details={"email": form.email, "tenant_id": str(tenant.id)}  # UUID → str
         )
         db.add(audit)
         await db.commit()
