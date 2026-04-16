@@ -1,0 +1,628 @@
+{
+  "info": {
+    "name": "Oryn API",
+    "description": "Multi-Tenant Project & Team Management SaaS Backend. Import this collection, set your environment variables, and run the full flow.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "team_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "project_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "comment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invitation_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "member_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health",
+            "description": "Check if the API is running."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@acme.com\",\n  \"username\": \"acme_owner\",\n  \"company_name\": \"Acme Corp\",\n  \"password\": \"password123\"\n}"
+            },
+            "description": "Register a new company and its owner. Creates a tenant, user, and Stripe customer automatically."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', json.access_token);",
+                  "pm.test('Token received', function() {",
+                  "  pm.expect(json.access_token).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@acme.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "description": "Login and receive a JWT token. The token is automatically saved to the collection variable."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/profile",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get the authenticated user's profile."
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/profile",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"updated_owner\"\n}"
+            },
+            "description": "Update the authenticated user's username."
+          }
+        },
+        {
+          "name": "Get Workspace",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/profile/workspace",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get the workspace details for the authenticated user's tenant."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invitations",
+      "item": [
+        {
+          "name": "Create Invitation Link",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('invitation_token', json.invitation_token);",
+                  "pm.test('Token received', function() {",
+                  "  pm.expect(json.invitation_token).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/workspace/invitations",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"max_uses\": 5\n}"
+            },
+            "description": "Generate an invitation link. Only owners can create invitations. Token is saved automatically."
+          }
+        },
+        {
+          "name": "Validate Invitation Token",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/invitations/{{invitation_token}}",
+            "description": "Validate an invitation token before showing the registration form."
+          }
+        },
+        {
+          "name": "Accept Invitation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/workspace/invitations/{{invitation_token}}/accept",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"member@acme.com\",\n  \"username\": \"acme_member\",\n  \"password\": \"password123\"\n}"
+            },
+            "description": "Accept an invitation and create a member account inside the tenant."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "item": [
+        {
+          "name": "Create Team",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('team_id', json.team.id);",
+                  "pm.test('Team ID saved', function() {",
+                  "  pm.expect(json.team.id).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/workspace/teams",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\"\n}"
+            },
+            "description": "Create a new team inside the workspace. Only owners can create teams."
+          }
+        },
+        {
+          "name": "Get All Teams",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get all teams in the authenticated user's workspace."
+          }
+        },
+        {
+          "name": "Get Team",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get details of a specific team."
+          }
+        },
+        {
+          "name": "Update Team",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Backend Engineering\"\n}"
+            },
+            "description": "Update a team's name. Only owners can edit teams."
+          }
+        },
+        {
+          "name": "Delete Team",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Permanently delete a team and all its members. Only owners can delete teams."
+          }
+        },
+        {
+          "name": "Add Member To Team",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/members",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{member_id}}\"\n}"
+            },
+            "description": "Add an existing workspace member to a team."
+          }
+        },
+        {
+          "name": "Get Team Members",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/members",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get all members of a specific team."
+          }
+        },
+        {
+          "name": "Remove Member From Team",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/members/{{member_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Remove a member from a team. Only owners can remove members."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create Project",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('project_id', json.project.id);",
+                  "pm.test('Project ID saved', function() {",
+                  "  pm.expect(json.project.id).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Website Redesign\",\n  \"description\": \"Redesign the main website\"\n}"
+            },
+            "description": "Create a new project inside a team. Only owners and admins can create projects."
+          }
+        },
+        {
+          "name": "Get All Projects In Team",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get all projects belonging to a specific team."
+          }
+        },
+        {
+          "name": "Get Project",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get details of a specific project."
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Project Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "description": "Update a project's name or description. Only owners and admins can edit projects."
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Permanently delete a project. Only owners can delete projects."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('task_id', json.task.id);",
+                  "pm.test('Task ID saved', function() {",
+                  "  pm.expect(json.task.id).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Design the homepage\",\n  \"description\": \"Create mockups for the homepage\"\n}"
+            },
+            "description": "Create a new task inside a project. All workspace members can create tasks."
+          }
+        },
+        {
+          "name": "Get All Tasks In Project",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get all tasks belonging to a specific project."
+          }
+        },
+        {
+          "name": "Get Task",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get details of a specific task."
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated task title\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "description": "Update a task's title, description or assignee."
+          }
+        },
+        {
+          "name": "Update Task Status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}/status",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}"
+            },
+            "description": "Update the status of a task. Valid values: todo, in_progress, in_review, done."
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Permanently delete a task. Only owners and admins can delete tasks."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Add Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('comment_id', json.comment.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}/comments",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"This task needs more detail on the mockup requirements.\"\n}"
+            },
+            "description": "Add a comment to a task. Requires task_comments feature on current plan."
+          }
+        },
+        {
+          "name": "Get All Comments",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}/comments",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get all comments on a task ordered by creation date."
+          }
+        },
+        {
+          "name": "Edit Comment",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}/comments/{{comment_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Updated comment body.\"\n}"
+            },
+            "description": "Edit a comment. Only the author can edit their own comments."
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/workspace/teams/{{team_id}}/projects/{{project_id}}/tasks/{{task_id}}/comments/{{comment_id}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Delete a comment. Authors can delete their own. Owners and admins can delete any."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "Get Subscription Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/billing/subscription",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get the current subscription status for the authenticated workspace."
+          }
+        },
+        {
+          "name": "Create Checkout Session — Pro",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/billing/checkout/Pro",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Create a Stripe checkout session for the Pro plan. Returns a URL to redirect the user to."
+          }
+        },
+        {
+          "name": "Create Checkout Session — Enterprise",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/billing/checkout/Enterprise",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Create a Stripe checkout session for the Enterprise plan."
+          }
+        }
+      ]
+    }
+  ]
+}
