@@ -12,7 +12,9 @@ router = APIRouter(tags=["Profile"])
 @router.get(
     "/profile",
     summary="Get current user's profile",
-    description="Returns the authenticated user's details including their email, username, role, and the workspace they belong to."
+    description="""
+    Returns the authenticated user's details including their email, username, role, and the workspace they belong to.
+    """
 )
 @limiter.limit("5/minute")
 async def get_profile_route(request: Request, user: User = Depends(get_current_user)):
@@ -22,7 +24,9 @@ async def get_profile_route(request: Request, user: User = Depends(get_current_u
 @router.get(
     "/profile/workspace",
     summary="Get current user's workspace",
-    description="Returns the details of the workspace the authenticated user belongs to, including the workspace name, creation date, and active plan."
+    description="""
+    Returns the details of the workspace the authenticated user belongs to, including the workspace name, creation date, and active plan.
+    """
 )
 @limiter.limit("5/minute")
 async def get_workspace_route(
@@ -36,7 +40,9 @@ async def get_workspace_route(
 @router.patch(
     "/profile",
     summary="Update current user's profile",
-    description="Allows the authenticated user to update their profile information. Currently supports updating the username. Only the fields provided will be updated."
+    description="""
+    Allows the authenticated user to update their profile information. Currently supports updating the username. Only the fields provided will be updated.
+    """
 )
 @limiter.limit("5/minute")
 async def update_profile_route(

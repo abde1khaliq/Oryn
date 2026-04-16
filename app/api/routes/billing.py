@@ -24,7 +24,9 @@ router = APIRouter()
 @router.post(
     "/checkout/{plan_name}",
     summary="Create a checkout session",
-    description="Creates a Stripe checkout session for the given plan. Returns a URL to redirect the user to Stripe's hosted payment page."
+    description="""
+    Creates a Stripe checkout session for the given plan. Returns a URL to redirect the user to Stripe's hosted payment page.
+    """
 )
 @limiter.limit("5/minute")
 async def create_checkout_route(

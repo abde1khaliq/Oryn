@@ -19,7 +19,9 @@ router = APIRouter(
 @router.post(
     "", 
     summary="Create a task", 
-    description="Creates a new task inside a project. All workspace members can create tasks. The assignee must be a member of the same workspace."
+    description="""
+    Creates a new task inside a project. All workspace members can create tasks. The assignee must be a member of the same workspace.
+    """
 )
 @limiter.limit("5/minute")
 async def create_task_route(
