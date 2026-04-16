@@ -27,7 +27,7 @@ async def create_invitation_route(
     if user.role != 'owner':
         raise HTTPException(status_code=403, detail='Only owners can invite members.')
 
-    await enforce_member_limit(current_user.tenant_id, db)
+    await enforce_member_limit(user.tenant_id, db)
 
     token = await create_invitation(db, user.tenant_id, user.id, form.max_uses)
     return {"invitation_token": token}

@@ -20,7 +20,7 @@ router = APIRouter()
     """
 )
 @limiter.limit("5/minute")
-async def get_tenant_info(
+async def get_tenant_info_route(
     request: Request,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -58,3 +58,29 @@ async def get_tenant_info(
         teams=team_count_result,
         projects=project_count_result
     )
+
+
+@router.get(
+    "/members",
+    summary="Retrieve all Workspace Members",
+    description="""
+    Returns the list of the members associated with this workspace.
+    """
+)
+@limiter.limit("5/minute")
+async def get_tenant_members_route(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Get the actual tenant    
+    result = await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))
+    tenant = result.scalar_one_or_none()
+
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Workspace not found.")
+
+    tenant_members = await db.execute(select(User).where(User.tenant_id == tenant.id))
+    members = tenant_members.scalars().all()
+
+    return {'members': [{"username": member.username, "user_id": member.id} for member in members]}
