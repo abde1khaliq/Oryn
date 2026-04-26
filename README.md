@@ -172,4 +172,4 @@ Interactive documentation is available once the server is running:
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - ReDoc: `http://127.0.0.1:8000/redoc`
 
-- Portions of this documentation were generated using AI.
+Portions of this documentation were generated using AI.
